@@ -6,224 +6,23 @@
     <groupId>demo-streaming</groupId>
     <artifactId>spark-streaming</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <build>
-        <outputDirectory>target/scala-${scala.binary.version}/classes</outputDirectory>
-        <testOutputDirectory>target/scala-${scala.binary.version}/test-classes</testOutputDirectory>
-    </build>
     <properties>
+        <scala.version>2.11.12</scala.version>
+        <spark.version>2.2.0</spark.version>
+        <hadoop.version>2.7.5</hadoop.version>
+        <hbase.version>1.4.0</hbase.version>
         <sbt.project.name>streaming-kafka-0-10</sbt.project.name>
         <kafka.version>0.10.0.1</kafka.version>
     </properties>
-    <profiles>
-        <profile>
-            <id>scala-2.12</id>
-            <properties>
-                <kafka.version>0.10.1.1</kafka.version>
-            </properties>
-        </profile>
-    </profiles>
+
     <dependencies>
         <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming_2.11</artifactId>
-            <version>2.3.1</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>spark-core_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
-            <version>2.3.1</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>chill_2.11</artifactId>
-                    <groupId>com.twitter</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>chill-java</artifactId>
-                    <groupId>com.twitter</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>xbean-asm5-shaded</artifactId>
-                    <groupId>org.apache.xbean</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spark-launcher_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spark-kvstore_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spark-network-common_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spark-network-shuffle_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spark-unsafe_2.11</artifactId>
-                    <groupId>org.apache.spark</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-plus</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-security</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-util</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-server</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-http</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-continuation</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-servlet</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-proxy</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-client</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jetty-servlets</artifactId>
-                    <groupId>org.eclipse.jetty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>javax.servlet-api</artifactId>
-                    <groupId>javax.servlet</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-lang3</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jul-to-slf4j</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>compress-lzf</artifactId>
-                    <groupId>com.ning</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>lz4-java</artifactId>
-                    <groupId>org.lz4</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>zstd-jni</artifactId>
-                    <groupId>com.github.luben</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>RoaringBitmap</artifactId>
-                    <groupId>org.roaringbitmap</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>json4s-jackson_2.11</artifactId>
-                    <groupId>org.json4s</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jersey-client</artifactId>
-                    <groupId>org.glassfish.jersey.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jersey-common</artifactId>
-                    <groupId>org.glassfish.jersey.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jersey-server</artifactId>
-                    <groupId>org.glassfish.jersey.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jersey-container-servlet</artifactId>
-                    <groupId>org.glassfish.jersey.containers</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jersey-container-servlet-core</artifactId>
-                    <groupId>org.glassfish.jersey.containers</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>netty-all</artifactId>
-                    <groupId>io.netty</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>stream</artifactId>
-                    <groupId>com.clearspring.analytics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>metrics-core</artifactId>
-                    <groupId>io.dropwizard.metrics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>metrics-jvm</artifactId>
-                    <groupId>io.dropwizard.metrics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>metrics-json</artifactId>
-                    <groupId>io.dropwizard.metrics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>metrics-graphite</artifactId>
-                    <groupId>io.dropwizard.metrics</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-databind</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-module-scala_2.11</artifactId>
-                    <groupId>com.fasterxml.jackson.module</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>ivy</artifactId>
-                    <groupId>org.apache.ivy</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>oro</artifactId>
-                    <groupId>oro</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>pyrolite</artifactId>
-                    <groupId>net.razorvine</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>py4j</artifactId>
-                    <groupId>net.sf.py4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>commons-crypto</artifactId>
-                    <groupId>org.apache.commons</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- Kafka 依赖-->
+
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
@@ -233,7 +32,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.11</artifactId>
             <version>0.10.0.1</version>
-            <scope>test</scope>
+            <scope>compile</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>zkclient</artifactId>
@@ -249,84 +48,155 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- Hadoop 依赖-->
         <dependency>
-            <groupId>net.sf.jopt-simple</groupId>
-            <artifactId>jopt-simple</artifactId>
-            <version>3.2</version>
-            <scope>test</scope>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
         </dependency>
+
+        <!-- HBase 依赖-->
         <dependency>
-            <groupId>org.scalacheck</groupId>
-            <artifactId>scalacheck_2.11</artifactId>
-            <version>1.13.5</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>test-interface</artifactId>
-                    <groupId>org.scala-sbt</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>${hbase.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-tags_2.11</artifactId>
-            <version>2.3.1</version>
-            <scope>compile</scope>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
         </dependency>
+
+        <!-- Spark Streaming 依赖-->
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-tags_2.11</artifactId>
-            <version>2.3.1</version>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <artifactId>spark-streaming_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
+
+
+        <!-- Spark Streaming整合Flume 依赖-->
         <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
-            <version>3.0.3</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>scalactic_2.11</artifactId>
-                    <groupId>org.scalactic</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>scala-reflect</artifactId>
-                    <groupId>org.scala-lang</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>scala-xml_2.11</artifactId>
-                    <groupId>org.scala-lang.modules</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>scala-parser-combinators_2.11</artifactId>
-                    <groupId>org.scala-lang.modules</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-flume_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>hamcrest-core</artifactId>
-                    <groupId>org.hamcrest</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-flume-sink_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>com.novocode</groupId>
-            <artifactId>junit-interface</artifactId>
-            <version>0.11</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>test-interface</artifactId>
-                    <groupId>org.scala-sbt</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
+        </dependency>
+
+        <!-- Spark SQL 依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-scala_2.11</artifactId>
+            <version>2.6.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.jpountz.lz4</groupId>
+            <artifactId>lz4</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.44</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flume.flume-ng-clients</groupId>
+            <artifactId>flume-ng-log4jappender</artifactId>
+            <version>1.8.0</version>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <!--
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <args>
+                        <arg>-target:jvm-1.5</arg>
+                    </args>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <configuration>
+                    <downloadSources>true</downloadSources>
+                    <buildcommands>
+                        <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
+                    </buildcommands>
+                    <additionalProjectnatures>
+                        <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
+                    </additionalProjectnatures>
+                    <classpathContainers>
+                        <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
+                        <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
+                    </classpathContainers>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>
