@@ -2,6 +2,7 @@ package cn.lee.demo.flink.app;
 
 import cn.lee.demo.flink.Const;
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
@@ -17,6 +18,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -24,22 +26,25 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer010;
 import org.apache.flink.util.Collector;
+import scala.collection.mutable.StringBuilder;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
  * Project Name:flink-parent
  * Package Name:org.apache.flink.streaming.examples.kafka.app
- * ClassName: CountActiveUser &lt;br/&gt;
+ * ClassName: ActiveUserStat &lt;br/&gt;
  * date: 2018/6/28 11:12 &lt;br/&gt;
  * TODO  详细描述这个类的功能等
  *
  * @author LI WEI
  * @since JDK 1.6
  */
-public class CountActiveUser {
+public class ActiveUserStat {
 
 	public static DataStream<LogEvent> mapTransform(DataStream<String> stream) {
 		DataStream<LogEvent> out = stream.filter(new FilterFunction<String>() {
@@ -69,76 +74,54 @@ public class CountActiveUser {
 				log.setChannelId(tokens[3]);
 				log.setImei(tokens[4]);
 				log.setDealTime(tokens[5]);
-				log.setTime(Const.format.parse(log.getDealTime()).getTime());
+				log.setTime(System.currentTimeMillis()+(log.getImei().hashCode()%10)*1000);
+
 				out.collect(log);
 			}
 		}).assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<LogEvent>(Time.seconds(5)) {
 			@Override
 			public long extractTimestamp(LogEvent element) {
-				System.out.println("event=" + element.getImei() + " | dealTime" + element.getDealTime() + "| wm=" + super.getCurrentWatermark().getTimestamp()
-					+ " |date_timestamp=" + Const.format.format(new Date(element.getTime()))
-					+ " |date_watermark=" + Const.format.format(new Date(super.getCurrentWatermark().getTimestamp()))
-					+ " | diff=" + (super.getCurrentWatermark().getTimestamp() - element.getTime()) / 1000 + "s"
+				System.out.println("event=" + element.getImei() + "| wm=" + super.getCurrentWatermark().getTimestamp()
+						+ " |date_timestamp=" + Const.format.format(new Date(element.getTime()))
+						+ " |date_watermark=" + Const.format.format(new Date(super.getCurrentWatermark().getTimestamp()))
+						+ " | diff=" + (super.getCurrentWatermark().getTimestamp() - element.getTime()) / 1000 + "s"
 				);
 				return element.getTime();
 			}
 		});
 		return out;
 	}
-
-	public static DataStream<LogEvent> doCount(DataStream<LogEvent> stream) {
-		DataStream<LogEvent> out = stream.keyBy("productId").window(TumblingEventTimeWindows.of(Time.seconds(10)))
-			.reduce(new ReduceFunction<LogEvent>() {
-				@Override
-				public LogEvent reduce(LogEvent value1, LogEvent value2) throws Exception {
-					System.out.println(value1.getImei() + "|" + value2.getImei());
-					return value1;
-				}
-			});
-		return out;
-	}
-
-	/**
-	 * @param stream
-	 * @return
-	 */
-	public static DataStream<String> countTransform(DataStream<LogEvent> stream) {
-		KeyedStream<LogEvent, Tuple4<String, String, String, String>> keyedStream1 = stream.keyBy(new KeySelector<LogEvent, Tuple4<String, String, String, String>>() {
+	public static DataStream<String> stat(DataStream<LogEvent> stream){
+		return stream.keyBy(new String[]{"productId", "channelId"}).timeWindow(Time.seconds(10)).process(new ProcessWindowFunction<LogEvent, String, Tuple, TimeWindow>() {
 			@Override
-			public Tuple4<String, String, String, String> getKey(LogEvent value) throws Exception {
-				Tuple4<String, String, String, String> key = new Tuple4<String, String, String, String>(value.getProductId(), value.getProductVersion(), value.getChannelId(), value.getImei());
-				return key;
-			}
-		});
-		KeyedStream<LogEvent, Tuple> keyedStream2 =keyedStream1.window(TumblingEventTimeWindows.of(Time.seconds(20))).reduce(new ReduceFunction<LogEvent>() {
-				@Override
-				public LogEvent reduce(LogEvent value1, LogEvent value2) throws Exception {
-					System.out.println("reduce element:" + value1);
-					System.out.println("reduce element:" + value2);
-					return value1;
-				}
-			}).keyBy(new String[]{"productId", "channelId"});
-		DataStream<String> out = keyedStream2.window(TumblingEventTimeWindows.of(Time.seconds(60))).apply(
-			new WindowFunction<LogEvent, String, Tuple, TimeWindow>() {
-			@Override
-			public void apply(Tuple tuple, TimeWindow window, Iterable<LogEvent> input, Collector<String> out) throws Exception {
-				Tuple2<String, String> dm = (Tuple2<String, String>) tuple;
-				final Tuple4<String, String, Integer, String> sum = new Tuple4<String, String, Integer, String>();
-				sum.f0 = dm.f0;
-				sum.f1 = dm.f1;
-				sum.f2 = 0;
-				sum.f3 = Const.format.format(window.getEnd());
-				input.forEach(new Consumer<LogEvent>() {
+			public void process(Tuple tuple, Context context, Iterable<LogEvent> iterable, Collector<String> collector) throws Exception {
+				Set<String> set=new HashSet<String>();
+				StringBuilder sb=new StringBuilder();
+				sb.append("[");
+				iterable.forEach(new Consumer<LogEvent>() {
 					@Override
 					public void accept(LogEvent logEvent) {
-						System.out.println(logEvent);
-						sum.f2 += 1;
+						set.add(logEvent.getImei());
+						sb.append(Const.format.format(new Date(logEvent.getTime()))).append(",");
 					}
 				});
-				out.collect(sum.toString());
+				sb.append("]");
+				StringBuilder msg=new StringBuilder();
+				msg.append("(dim=").append(tuple);
+				msg.append(",metric=").append(set.size());
+				msg.append(")");
+				msg.append("(window ");
+				msg.append("start=").append(Const.format.format(new Date(context.window().getStart())));
+				msg.append(",end=").append(Const.format.format(new Date(context.window().getEnd())));
+				msg.append(",maxTime=").append(Const.format.format(new Date(context.window().maxTimestamp())));
+				msg.append(",wm=").append(Const.format.format(new Date(context.currentWatermark())));
+				msg.append(",processTime=").append(Const.format.format(new Date(context.currentProcessingTime())));
+				msg.append(")").append(sb);
+				System.out.println(msg.toString());
+				collector.collect(msg.toString());
 			}
 		});
-		return out;
+
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -157,7 +140,7 @@ public class CountActiveUser {
 		}
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();//.getExecutionEnvironment();
 //		env.getConfig().disableSysoutLogging();
-		env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 10000));
+		env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 1000));
 		env.enableCheckpointing(5000 * 60); // create a checkpoint every 1000 *10 seconds
 		env.getConfig().setGlobalJobParameters(parameterTool); // make parameters available in the web interface
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -165,7 +148,7 @@ public class CountActiveUser {
 		FlinkKafkaProducer010 sink=new FlinkKafkaProducer010<String>(parameterTool.getRequired("output-topic"), new SimpleStringSchema(),parameterTool.getProperties());
 
 		DataStream<String> messageStream = env.addSource(source);
-		countTransform(mapTransform(messageStream)).addSink(sink);
+		stat(mapTransform(messageStream)).addSink(sink);
 		env.execute("count active demo 1");
 	}
 

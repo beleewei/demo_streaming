@@ -46,8 +46,7 @@ public class LogConsumer {
 		env.getConfig().setGlobalJobParameters(parameterTool); // make parameters available in the web interface
 		FlinkKafkaConsumer010 sink=new FlinkKafkaConsumer010<String>(parameterTool.getRequired("topic"), new SimpleStringSchema(),parameterTool.getProperties());
 
-		DataStream<String> messageStream = env
-			.addSource(sink);
+		DataStream<String> messageStream = env.addSource(sink);
 
 		// write kafka stream to standard out.
 		messageStream.print();

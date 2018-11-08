@@ -22,10 +22,13 @@ public class Const {
 	public static final String KAFKA_TOPIC_3="topic2";
 	public static final String TOPIC_INPUT="topic1";
 	public static final String TOPIC_OUTPUT="topic2";
+
+	public static final String TOPIC_REDIS_INPUT="topic_redis_input";
+	public static final String TOPIC_REDIS_OUT="topic_redis_output";
 	public static final String ZK_CLIENT="202.182.118.175:2181";
 	public static final String CONSUMER_GROUP_1="LogConsumerGroup";
 	public static final String CONSUMER_GROUP_2="LogConsumerGroup_count";
-	public static final SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+	public static final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
 
 
 }

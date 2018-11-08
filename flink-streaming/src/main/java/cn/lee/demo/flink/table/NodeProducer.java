@@ -1,19 +1,21 @@
-package cn.lee.demo.flink.app;
+package cn.lee.demo.flink.table;
 
 import cn.lee.demo.flink.Const;
+import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.serialization.TypeInformationSerializationSchema;
+import org.apache.flink.api.java.typeutils.PojoField;
+import org.apache.flink.api.java.typeutils.PojoTypeInfo;
+import org.apache.flink.api.java.typeutils.runtime.kryo.KryoSerializer;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.shaded.guava18.com.google.common.collect.Lists;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer010;
 
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,24 +28,26 @@ import java.util.concurrent.TimeUnit;
  * @author LI WEI
  * @since JDK 1.6
  */
-public class LogProducer {
-	private static String[] productIds = new String[]{"1020","04","001","002"};
-	private static String[] productVersions = new String[]{"v1","v2","v3"};
-	private static String[] channelIds = new String[]{"channel001","channel002","channel003","channel004","channel004"};
+public class NodeProducer {
+	private static String[] ip = new String[]{"10.23.10.11:7000","10.23.10.11:7001","10.23.10.11:7002","10.23.10.11:7003","10.23.10.11:7004","10.23.10.11:7005"};
 
-	//product_id,product_version,sub_channel_id,imei,deal_time
-	public static String produceLog() {
-		int num = (int) (Math.random() * 100000);
-		StringBuilder str = new StringBuilder();
-		String id=UUID.randomUUID().toString().replace("-", "");
-		str.append(id).append(",");
-		str.append(productIds[num % productIds.length]).append(",");
-		str.append(productVersions[num % productVersions.length]).append(",");
-		str.append(channelIds[num % productVersions.length]).append(",");
-		String imei =id.substring(0, 10) + num;
-		str.append(imei).append(",");
-		str.append(Const.format.format(new Date()));
-		return str.toString();
+	public static RedisNode produceNode() {
+		int tps = (int) (Math.random() * 100000);
+		int idx=tps%ip.length;
+		double inputBytes=Math.random() * 10000000;
+		double outBytes=Math.random() * 10000000;
+		String role=idx%2==0?"master":"slave";
+		String address=ip[idx];
+	    long time=System.currentTimeMillis();
+		RedisNode node=new RedisNode();
+		node.setAddress(address);
+		node.setTps(tps);
+		node.setSize(time/1000);
+		node.setInputBytes(inputBytes);
+		node.setOutputBytes(outBytes);
+		node.setTime(time);
+		node.setRole(role);
+		return node;
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -54,32 +58,27 @@ public class LogProducer {
 			System.out.println("Usage: Kafka --topic <topic> --bootstrap.servers <kafka brokers>");
 			Map<String, String> param=new HashMap<>();
 			param.put("bootstrap.servers", Const.KAFKA_SERVER_IP + ":" + Const.KAFKA_SERVER_PORT);
-			param.put("topic", Const.TOPIC_INPUT);
+			param.put("topic", Const.TOPIC_REDIS_INPUT);
 			parameterTool=parameterTool.fromMap(param);
 		}
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.getConfig().disableSysoutLogging();
 		env.getConfig().setRestartStrategy(RestartStrategies.fixedDelayRestart(4, 10000));
+		TypeInformationSerializationSchema<RedisNode> type=new TypeInformationSerializationSchema<RedisNode>(PojoTypeInfo.of(RedisNode.class),env.getConfig());
 
-		FlinkKafkaProducer010 source=new FlinkKafkaProducer010<String>(parameterTool.getRequired("topic"), new SimpleStringSchema(),parameterTool.getProperties());
+		FlinkKafkaProducer010 source=new FlinkKafkaProducer010<RedisNode>(parameterTool.getRequired("topic"),type ,parameterTool.getProperties());
 
 		// very simple data generator
-		DataStream<String> messageStream = env.addSource(new SourceFunction<String>() {
+		DataStream<RedisNode> messageStream = env.addSource(new SourceFunction<RedisNode>() {
 			private static final long serialVersionUID = 6369260445318862378L;
 			public boolean running = true;
 
 			@Override
-			public void run(SourceContext<String> ctx) throws Exception {
+			public void run(SourceContext<RedisNode> ctx) throws Exception {
 				while (this.running) {
-					String log = produceLog();
+					RedisNode log = produceNode();
 					ctx.collect(log);
 					System.out.println(log);
-					//制造重复数据
-					if (log.hashCode() % 5 == 0) {
-						String[] nodes=log.split(",");
-						log=log.replaceAll(nodes[0],UUID.randomUUID().toString().replace("-", ""));
-						ctx.collect(log);
-					}
 					TimeUnit.SECONDS.sleep(1);
 				}
 			}
