@@ -14,7 +14,7 @@ import java.util.Date;
  * @since JDK 1.6
  */
 public class RedisNode {
-    private long time;
+    private long evtTime;
     private int tps;
     private double inputBytes;
     private double outputBytes;
@@ -23,8 +23,12 @@ public class RedisNode {
     private String address;
 
 
-    public long getTime() {
-        return time;
+    public long getEvtTime() {
+        return evtTime;
+    }
+
+    public void setEvtTime(long evtTime) {
+        this.evtTime = evtTime;
     }
 
     public long getSize() {
@@ -35,9 +39,6 @@ public class RedisNode {
         this.size = size;
     }
 
-    public void setTime(long time) {
-        this.time = time;
-    }
 
     public int getTps() {
         return tps;
@@ -81,6 +82,6 @@ public class RedisNode {
 
     @Override
     public String toString() {
-        return address+"|"+this.getRole()+"|"+this.inputBytes+"|"+this.outputBytes+" at "+this.tps+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time));
+        return address+"|"+this.getRole()+"|"+this.inputBytes+"|"+this.outputBytes+" at "+this.tps+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(evtTime));
     }
 }

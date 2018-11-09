@@ -45,7 +45,7 @@ public class NodeProducer {
 		node.setSize(time/1000);
 		node.setInputBytes(inputBytes);
 		node.setOutputBytes(outBytes);
-		node.setTime(time);
+		node.setEvtTime(time);
 		node.setRole(role);
 		return node;
 	}
