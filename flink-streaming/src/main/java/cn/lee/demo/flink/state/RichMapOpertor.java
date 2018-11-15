@@ -3,9 +3,9 @@ package cn.lee.demo.flink.state;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
@@ -27,15 +27,6 @@ import java.util.function.Consumer;
  */
 public class RichMapOpertor extends RichFlatMapFunction<String, String> implements CheckpointedFunction{
     ListState<String> listState;
-
-//    @Override
-//    public void open(Configuration parameters) throws Exception {
-//        ListStateDescriptor<String> listStateDescriptor = new ListStateDescriptor<String>(
-//                "listStateName1",
-//                 TypeInformation.of(new TypeHint<String>() {}));
-//       this.listState=getRuntimeContext().getListState(listStateDescriptor);
-//        System.out.println("opened");
-//    }
 
     @Override
     public void snapshotState(FunctionSnapshotContext functionSnapshotContext) throws Exception {
@@ -62,6 +53,7 @@ public class RichMapOpertor extends RichFlatMapFunction<String, String> implemen
                         "listStateName1",
                         TypeInformation.of(new TypeHint<String>() {}));
        this.listState=context.getOperatorStateStore().getListState(listStateDescriptor);
+
 
     }
 

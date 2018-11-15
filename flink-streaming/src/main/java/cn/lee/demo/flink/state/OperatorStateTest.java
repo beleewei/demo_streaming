@@ -1,5 +1,6 @@
 package cn.lee.demo.flink.state;
 
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
@@ -37,29 +38,15 @@ public class OperatorStateTest {
 // enable externalized checkpoints which are retained after job cancellation
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
         env.getCheckpointConfig().setFailOnCheckpointingErrors(true);
-        env.setParallelism(8);
-        env.addSource(new ParallelSourceFunction<String>() {
+        env.setParallelism(1);
+        env.fromElements("1", "2", "3","1" ,"4", "5", "6", "7","1" , "8", "9", "10", "1" ,"11", "12", "13", "14", "15", "16", "17", "18", "19","1", "20").map(new MapFunction<String, Long>() {
             @Override
-            public void run(SourceContext<String> sourceContext) throws Exception {
-                String[] array = new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"};
-                for (String s : array) {
-                    sourceContext.collect(s);
-                    TimeUnit.MILLISECONDS.sleep(500);
-                }
-            }
-
-            @Override
-            public void cancel() {
-
+            public Long map(String s) throws Exception {
+                return Long.parseLong(s);
             }
         })
-                .flatMap(new RichMapOpertor())
-                .addSink(new SinkFunction<String>() {
-                    @Override
-                    public void invoke(String value, Context context) throws Exception {
-                        System.out.println(value);
-                    }
-                });
+                .flatMap(new FlatMapOperator())
+                .print();
         env.execute("OperatorStateTest1");
     }
 }
